@@ -32,21 +32,24 @@ total_compute_time = MPI.Wtime()
 scatter_time = MPI.Wtime()
 chunk = comm.scatter(chunks, root=0)
 scatter_time = MPI.Wtime() - scatter_time
-#compute_time = MPI.Wtime()
+compute_time = MPI.Wtime()
 chunk_sorted = quick_sort(chunk)
-#compute_time = MPI.Wtime() - compute_time
+compute_time = MPI.Wtime() - compute_time
 gather_time = MPI.Wtime()
+max_local_sort_time = comm.reduce(compute_time, op=MPI.MAX, root=0)
 sorted_chunks = comm.gather(chunk_sorted, root=0)
 gather_time = MPI.Wtime() - gather_time
 
 
 if rank == 0:
-    #final_merge_time = MPI.Wtime()
+    final_merge_time = MPI.Wtime()
     #sorted_data = quick_sort(np.concatenate(sorted_chunks))
     #sorted_data = merge_sorted_arrays(sorted_chunks)
     sorted_data = list(heapq.merge(*sorted_chunks))
-    #final_merge_time = MPI.Wtime() - final_merge_time
+    final_merge_time = MPI.Wtime() - final_merge_time
     total_compute_time = MPI.Wtime() - total_compute_time
+    print(max_local_sort_time + final_merge_time)
+    print(total_compute_time - (scatter_time + gather_time))
     #print(sorted_data)
     #@standard_sort_time = MPI.Wtime()
     #data = quick_sort(data)
@@ -61,12 +64,12 @@ if rank == 0:
     is_sorted = sorted_data == sorted(sorted_data)
     print(f"Is the data sorted? {'Yes' if is_sorted else 'No'}")
     #print to file5
-    with open("experiment_results/7p/data_200_results/experiment_4.txt", "w") as f:
-        #f.write(f"Is the data sorted? {'Yes' if is_sorted else 'No'}\n")
-        f.write(f"{scatter_time}\n")
-        f.write(f"{gather_time}\n")
-        f.write(f"{scatter_time + gather_time}\n")
-        f.write(f"{total_compute_time}\n")
-        #f.write(f"Final merge time: {final_merge_time} seconds.\n")
+    # with open("experiment_results/7p/data_200_results/experiment_4.txt", "w") as f:
+    #     #f.write(f"Is the data sorted? {'Yes' if is_sorted else 'No'}\n")
+    #     f.write(f"{scatter_time}\n")
+    #     f.write(f"{gather_time}\n")
+    #     f.write(f"{scatter_time + gather_time}\n")
+    #     f.write(f"{total_compute_time}\n")
+    #     #f.write(f"Final merge time: {final_merge_time} seconds.\n")
 
 
